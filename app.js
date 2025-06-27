@@ -1,4 +1,3 @@
-
 import * as THREE from './libs/three/three.module.js';
 import { GLTFLoader } from './libs/three/jsm/GLTFLoader.js';
 import { DRACOLoader } from './libs/three/jsm/DRACOLoader.js';
@@ -20,7 +19,7 @@ class App{
 		this.camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.01, 500 );
 		this.camera.position.set( 0, 1.6, 0 );
         
-        this.dolly = new THREE.Object3D(  );
+        this.dolly = new THREE.Object3D();
         this.dolly.position.set(0, 0, 10);
         this.dolly.add( this.camera );
         this.dummyCam = new THREE.Object3D();
@@ -93,65 +92,55 @@ class App{
     
 	loadCollege(){
         
-		const loader = new GLTFLoader( ).setPath(this.assetsPath);
+		const loader = new GLTFLoader().setPath(this.assetsPath);
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath( './libs/three/js/draco/' );
         loader.setDRACOLoader( dracoLoader );
         
         const self = this;
 		
-		// Load a glTF resource
-		loader.load(
-			// resource URL
-			'college.glb',
-			// called when the resource is loaded
-			function ( gltf ) {
-
-                const college = gltf.scene.children[0];
-				self.scene.add( college );
-				
-				college.traverse(function (child) {
-    				if (child.isMesh){
-						if (child.name.indexOf("PROXY")!=-1){
-							child.material.visible = false;
-							self.proxy = child;
-						}else if (child.material.name.indexOf('Glass')!=-1){
-                            child.material.opacity = 0.1;
-                            child.material.transparent = true;
-                        }else if (child.material.name.indexOf("SkyBox")!=-1){
-                            const mat1 = child.material;
-                            const mat2 = new THREE.MeshBasicMaterial({map: mat1.map});
-                            child.material = mat2;
-                            mat1.dispose();
-                        }
-					}
-				});
-                       
-                const door1 = college.getObjectByName("LobbyShop_Door__1_");
-                const door2 = college.getObjectByName("LobbyShop_Door__2_");
-                const pos = door1.position.clone().sub(door2.position).multiplyScalar(0.5).add(door2.position);
-                const obj = new THREE.Object3D();
-                obj.name = "LobbyShop";
-                obj.position.copy(pos);
-                college.add( obj );
-                
-                self.loadingBar.visible = false;
+		loader.load('college.glb', function ( gltf ) {
+            const college = gltf.scene.children[0];
+			self.scene.add( college );
 			
-                self.setupXR();
-			},
-			// called while loading is progressing
-			function ( xhr ) {
-
-				self.loadingBar.progress = (xhr.loaded / xhr.total);
-				
-			},
-			// called when loading has errors
-			function ( error ) {
-
-				console.log( 'An error happened' );
-
-			}
-		);
+			college.traverse(function (child) {
+    			if (child.isMesh){
+                // Set pastel blue wall color
+                if (child.name.includes("Wall") || child.material.name.includes("Wall")) {
+                    child.material = new THREE.MeshStandardMaterial({ color: 0xadd8e6 });
+                }
+                if (child.name.indexOf("PROXY") !== -1){
+                    child.material.visible = false;
+                    self.proxy = child;
+                } else if (child.material.name.indexOf('Glass') !== -1){
+                    child.material.opacity = 0.1;
+                    child.material.transparent = true;
+                } else if (child.material.name.indexOf("SkyBox") !== -1){
+                    const mat1 = child.material;
+                    const mat2 = new THREE.MeshBasicMaterial({map: mat1.map});
+                    child.material = mat2;
+                    mat1.dispose();
+                }
+            }
+        });
+			
+            const door1 = college.getObjectByName("LobbyShop_Door__1_");
+            const door2 = college.getObjectByName("LobbyShop_Door__2_");
+            const pos = door1.position.clone().sub(door2.position).multiplyScalar(0.5).add(door2.position);
+            const obj = new THREE.Object3D();
+            obj.name = "LobbyShop";
+            obj.position.copy(pos);
+            college.add( obj );
+            
+            self.loadingBar.visible = false;
+			self.setupXR();
+		},
+		function ( xhr ) {
+			self.loadingBar.progress = (xhr.loaded / xhr.total);
+		},
+		function ( error ) {
+			console.log( 'An error happened' );
+		});
 	}
     
     setupXR(){
