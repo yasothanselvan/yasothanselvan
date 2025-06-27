@@ -33,6 +33,18 @@ class App {
 		const ambient = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.8);
 		this.scene.add(ambient);
 
+		// 🔆 SpotLight Toggle Setup
+		this.spotLight = new THREE.SpotLight(0xffffff, 1);
+		this.spotLight.position.set(5, 10, 5);
+		this.spotLight.angle = Math.PI / 6;
+		this.spotLight.penumbra = 0.3;
+		this.spotLight.visible = true;
+		this.scene.add(this.spotLight);
+
+		window.addEventListener('keydown', (e) => {
+			if (e.key === 'l' || e.key === 'L') this.toggleLight();
+		});
+
 		this.renderer = new THREE.WebGLRenderer({ antialias: true });
 		this.renderer.setPixelRatio(window.devicePixelRatio);
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -66,13 +78,17 @@ class App {
 				this.boardData = obj;
 			});
 
-		// 👂 Ensure user click starts the audio context
 		window.addEventListener('click', () => {
 			if (this.ambientSound?.context.state !== 'running') {
 				this.ambientSound.context.resume();
 				this.ambientSound.play();
 			}
 		}, { once: true });
+	}
+
+	toggleLight() {
+		this.spotLight.visible = !this.spotLight.visible;
+		console.log(`Light is now ${this.spotLight.visible ? 'ON' : 'OFF'}`);
 	}
 
 	loadAudio() {
@@ -83,7 +99,6 @@ class App {
 			this.ambientSound.setBuffer(buffer);
 			this.ambientSound.setLoop(true);
 			this.ambientSound.setVolume(0.3);
-			// Play is now triggered by user interaction (see constructor)
 		});
 
 		this.footstepSound = new THREE.Audio(this.listener);
@@ -244,21 +259,18 @@ class App {
 			if (this.footstepSound && !this.footstepSound.isPlaying) this.footstepSound.play();
 		}
 
-		// Collision: left
 		dir.set(-1, 0, 0).applyMatrix4(this.dolly.matrix).normalize();
 		this.raycaster.set(pos, dir);
 		intersect = this.raycaster.intersectObject(this.proxy);
 		if (intersect.length > 0 && intersect[0].distance < wallLimit)
 			this.dolly.translateX(wallLimit - intersect[0].distance);
 
-		// Collision: right
 		dir.set(1, 0, 0).applyMatrix4(this.dolly.matrix).normalize();
 		this.raycaster.set(pos, dir);
 		intersect = this.raycaster.intersectObject(this.proxy);
 		if (intersect.length > 0 && intersect[0].distance < wallLimit)
 			this.dolly.translateX(intersect[0].distance - wallLimit);
 
-		// Collision: ground
 		dir.set(0, -1, 0);
 		pos.y += 1.5;
 		this.raycaster.set(pos, dir);
