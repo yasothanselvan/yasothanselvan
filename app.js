@@ -157,10 +157,10 @@ class App {
 			college.traverse((child) => {
 				if (child.isMesh) {
 					if (child.name.includes("Wall") || child.material.name.includes("Wall")) {
-						child.material = new THREE.MeshStandardMaterial({ color: 0xadd8e6 });
+						child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
 					}
 					if (child.name.includes("Floor") || child.material.name.includes("Floor")) {
-						child.material = new THREE.MeshStandardMaterial({ color: 0xdddddd });
+						child.material = new THREE.MeshStandardMaterial({ color: 0x000000 });
 					}
 					if (child.name.includes("Stair") || child.material.name.includes("Stair")) {
 						child.material = new THREE.MeshStandardMaterial({ color: 0xcd853f });
