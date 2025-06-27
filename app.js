@@ -128,7 +128,7 @@ class App {
 
 			this.scene.traverse((child) => {
 				if (child.isMesh && child.material && child.material.envMapIntensity !== undefined) {
-					child.material.envMapIntensity = 0.4;
+					child.material.envMapIntensity = 0.2;
 				}
 			});
 
@@ -169,7 +169,7 @@ class App {
 						child.material.visible = false;
 						this.proxy = child;
 					} else if (child.material.name.indexOf('Glass') !== -1) {
-						child.material.opacity = 0.1;
+						child.material.opacity = 0.4;
 						child.material.transparent = true;
 					} else if (child.material.name.indexOf("SkyBox") !== -1) {
 						const mat1 = child.material;
