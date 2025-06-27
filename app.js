@@ -32,7 +32,6 @@ class App {
 		const ambient = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.8);
 		this.scene.add(ambient);
 
-		// 💡 SpotLight for whole scene
 		this.spotLight = new THREE.SpotLight(0xffffff, 1);
 		this.spotLight.position.set(0, 10, 0);
 		this.spotLight.angle = Math.PI / 4;
@@ -41,7 +40,6 @@ class App {
 		this.spotLight.visible = true;
 		this.scene.add(this.spotLight);
 
-		// 🔑 Toggle light with 'L'
 		window.addEventListener('keydown', (e) => {
 			if (e.key === 'l' || e.key === 'L') this.toggleLight();
 		});
@@ -71,12 +69,11 @@ class App {
 		container.appendChild(this.stats.dom);
 
 		this.loadingBar = new LoadingBar();
-
 		this.loadCollege();
 		this.immersive = false;
 
 		fetch('./college.json')
-			.then(response => response.json())
+			.then(res => res.json())
 			.then(obj => {
 				this.boardShown = '';
 				this.boardData = obj;
@@ -152,7 +149,7 @@ class App {
 					} else if (child.material.name.indexOf("Glass") !== -1) {
 						child.material.transparent = true;
 						child.material.opacity = 0.2;
-						child.material.color.set(0x000000); // light black tint
+						child.material.color.set(0x111111);
 					} else if (child.name.indexOf("PROXY") !== -1) {
 						child.material.visible = false;
 						this.proxy = child;
@@ -161,9 +158,7 @@ class App {
 			});
 
 			const door = college.getObjectByName("LobbyShop_Door__1_");
-			if (door) {
-				this.loadPerson(door.position);
-			}
+			if (door) this.loadPerson(door.position);
 
 			this.loadingBar.visible = false;
 			this.setupXR();
@@ -175,44 +170,43 @@ class App {
 		loader.load('person.glb', (gltf) => {
 			const model = gltf.scene;
 			model.scale.set(1, 1, 1);
-			model.position.copy(pos).add(new THREE.Vector3(0, 0, 1)); // Slight offset
+			model.position.copy(pos).add(new THREE.Vector3(0, 0, 1));
 			this.scene.add(model);
 		});
 	}
 
 	setupXR() {
-	this.renderer.xr.enabled = true;
-	document.body.appendChild(new VRButton(this.renderer)); // ✅ Fix is here
+		this.renderer.xr.enabled = true;
+		document.body.appendChild(VRButton(this.renderer)); // ✅ Fixed VRButton usage
 
-	const timeoutId = setTimeout(() => {
-		this.useGaze = true;
-		this.gazeController = new GazeController(this.scene, this.dummyCam);
-	}, 2000);
+		const timeoutId = setTimeout(() => {
+			this.useGaze = true;
+			this.gazeController = new GazeController(this.scene, this.dummyCam);
+		}, 2000);
 
-	this.controllers = this.buildControllers(this.dolly);
+		this.controllers = this.buildControllers(this.dolly);
 
-	this.controllers.forEach(controller => {
-		controller.addEventListener('selectstart', () => controller.userData.selectPressed = true);
-		controller.addEventListener('selectend', () => controller.userData.selectPressed = false);
-		controller.addEventListener('connected', () => clearTimeout(timeoutId));
-	});
+		this.controllers.forEach(controller => {
+			controller.addEventListener('selectstart', () => controller.userData.selectPressed = true);
+			controller.addEventListener('selectend', () => controller.userData.selectPressed = false);
+			controller.addEventListener('connected', () => clearTimeout(timeoutId));
+		});
 
-	const config = {
-		panelSize: { height: 0.5 },
-		height: 256,
-		name: { fontSize: 50, height: 70 },
-		info: { position: { top: 70, backgroundColor: "#ccc", fontColor: "#000" } }
-	};
-	const content = { name: "name", info: "info" };
-	this.ui = new CanvasUI(content, config);
-	this.scene.add(this.ui.mesh);
+		const config = {
+			panelSize: { height: 0.5 },
+			height: 256,
+			name: { fontSize: 50, height: 70 },
+			info: { position: { top: 70, backgroundColor: "#ccc", fontColor: "#000" } }
+		};
+		const content = { name: "name", info: "info" };
+		this.ui = new CanvasUI(content, config);
+		this.scene.add(this.ui.mesh);
 
-	this.renderer.setAnimationLoop(this.render.bind(this));
-}
-
+		this.renderer.setAnimationLoop(this.render.bind(this));
+	}
 
 	buildControllers(parent) {
-		const controllerModelFactory = new XRControllerModelFactory();
+		const factory = new XRControllerModelFactory();
 		const geometry = new THREE.BufferGeometry().setFromPoints([
 			new THREE.Vector3(0, 0, 0),
 			new THREE.Vector3(0, 0, -1)
@@ -221,8 +215,7 @@ class App {
 		line.scale.z = 0;
 
 		const controllers = [];
-
-		for (let i = 0; i <= 1; i++) {
+		for (let i = 0; i < 2; i++) {
 			const controller = this.renderer.xr.getController(i);
 			controller.add(line.clone());
 			controller.userData.selectPressed = false;
@@ -230,7 +223,7 @@ class App {
 			controllers.push(controller);
 
 			const grip = this.renderer.xr.getControllerGrip(i);
-			grip.add(controllerModelFactory.createControllerModel(grip));
+			grip.add(factory.createControllerModel(grip));
 			parent.add(grip);
 		}
 		return controllers;
@@ -253,9 +246,8 @@ class App {
 		dir.negate();
 		this.raycaster.set(pos, dir);
 
-		let blocked = false;
 		let intersect = this.raycaster.intersectObject(this.proxy);
-		if (intersect.length > 0 && intersect[0].distance < wallLimit) blocked = true;
+		let blocked = intersect.length > 0 && intersect[0].distance < wallLimit;
 
 		if (!blocked) {
 			this.dolly.translateZ(-dt * speed);
@@ -263,7 +255,6 @@ class App {
 			if (this.footstepSound && !this.footstepSound.isPlaying) this.footstepSound.play();
 		}
 
-		// Collision sides
 		dir.set(-1, 0, 0).applyMatrix4(this.dolly.matrix).normalize();
 		this.raycaster.set(pos, dir);
 		intersect = this.raycaster.intersectObject(this.proxy);
@@ -276,7 +267,6 @@ class App {
 		if (intersect.length > 0 && intersect[0].distance < wallLimit)
 			this.dolly.translateX(intersect[0].distance - wallLimit);
 
-		// Floor
 		dir.set(0, -1, 0);
 		pos.y += 1.5;
 		this.raycaster.set(pos, dir);
