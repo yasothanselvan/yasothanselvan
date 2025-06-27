@@ -73,7 +73,7 @@ class App{
         
         const self = this;
         
-        loader.load( './assets/hdr/venice_sunset_1k.hdr', ( texture ) => {
+        loader.load( './assets/hdr/Cobblestone Street Night.hdr', ( texture ) => {
           const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
           pmremGenerator.dispose();
 
