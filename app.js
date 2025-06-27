@@ -41,6 +41,7 @@ class App {
 		this.spotLight.visible = true;
 		this.scene.add(this.spotLight);
 
+		// 🔑 Enable keyboard control (fix focus + listener)
 		window.addEventListener('keydown', (e) => {
 			if (e.key === 'l' || e.key === 'L') this.toggleLight();
 		});
@@ -50,6 +51,11 @@ class App {
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		this.renderer.outputEncoding = THREE.sRGBEncoding;
 		container.appendChild(this.renderer.domElement);
+
+		// 🛠️ Focus fix for key input to register
+		this.renderer.domElement.setAttribute('tabindex', '0');
+		this.renderer.domElement.style.outline = 'none';
+		this.renderer.domElement.focus();
 
 		this.setEnvironment();
 		this.loadAudio();
