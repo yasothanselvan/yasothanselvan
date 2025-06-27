@@ -113,6 +113,10 @@ class App{
                 if (child.name.includes("Floor") || child.material.name.includes("Floor")) {
                     child.material = new THREE.MeshStandardMaterial({ color: 0xdddddd });
                 }
+                // Set stairs color to light brown
+                if (child.name.includes("Stair") || child.material.name.includes("Stair")) {
+                    child.material = new THREE.MeshStandardMaterial({ color: 0xcd853f });
+                }
                 if (child.name.indexOf("PROXY") !== -1){
                     child.material.visible = false;
                     self.proxy = child;
