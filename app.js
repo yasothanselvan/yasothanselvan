@@ -15,6 +15,7 @@ class App {
 		document.body.appendChild(container);
 
 		this.assetsPath = './assets/';
+
 		this.listener = new THREE.AudioListener();
 		this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 500);
 		this.camera.position.set(0, 1.6, 0);
@@ -29,11 +30,9 @@ class App {
 		this.scene = new THREE.Scene();
 		this.scene.add(this.dolly);
 
-		// Ambient light
 		const ambient = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.8);
 		this.scene.add(ambient);
 
-		// Directional light for full building
 		this.directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 		this.directionalLight.position.set(10, 20, 10);
 		this.directionalLight.target.position.set(0, 0, 0);
@@ -50,8 +49,6 @@ class App {
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		this.renderer.outputEncoding = THREE.sRGBEncoding;
 		container.appendChild(this.renderer.domElement);
-
-		// Make canvas focusable so key events register
 		this.renderer.domElement.setAttribute('tabindex', '0');
 		this.renderer.domElement.style.outline = 'none';
 		this.renderer.domElement.focus();
@@ -64,6 +61,11 @@ class App {
 		this.clock = new THREE.Clock();
 		this.stats = new Stats();
 		container.appendChild(this.stats.dom);
+
+		this.origin = new THREE.Vector3();
+		this.workingVec3 = new THREE.Vector3();
+		this.workingQuaternion = new THREE.Quaternion();
+		this.raycaster = new THREE.Raycaster();
 
 		this.loadingBar = new LoadingBar();
 		this.loadCollege();
@@ -123,7 +125,9 @@ class App {
 	resize() {
 		this.camera.aspect = window.innerWidth / window.innerHeight;
 		this.camera.updateProjectionMatrix();
-		this.renderer.setSize(window.innerWidth, window.innerHeight);
+		if (!this.renderer.xr.isPresenting) {
+			this.renderer.setSize(window.innerWidth, window.innerHeight);
+		}
 	}
 
 	loadCollege() {
@@ -242,16 +246,16 @@ class App {
 		let pos = this.dolly.position.clone();
 		pos.y += 1;
 
+		this.dummyCam.getWorldQuaternion(this.workingQuaternion);
 		const quaternion = this.dolly.quaternion.clone();
-		this.dolly.quaternion.copy(this.dummyCam.getWorldQuaternion(this.workingQuaternion));
+		this.dolly.quaternion.copy(this.workingQuaternion);
+
 		const dir = new THREE.Vector3();
-		this.dolly.getWorldDirection(dir);
-		dir.negate();
+		this.dolly.getWorldDirection(dir).negate();
 		this.raycaster.set(pos, dir);
 
-		let blocked = false;
 		let intersect = this.raycaster.intersectObject(this.proxy);
-		if (intersect.length > 0 && intersect[0].distance < wallLimit) blocked = true;
+		let blocked = intersect.length > 0 && intersect[0].distance < wallLimit;
 
 		if (!blocked) {
 			this.dolly.translateZ(-dt * speed);
@@ -259,7 +263,6 @@ class App {
 			if (this.footstepSound && !this.footstepSound.isPlaying) this.footstepSound.play();
 		}
 
-		// side collisions
 		for (let x of [-1, 1]) {
 			dir.set(x, 0, 0).applyMatrix4(this.dolly.matrix).normalize();
 			this.raycaster.set(pos, dir);
@@ -268,7 +271,6 @@ class App {
 				this.dolly.translateX(x * (wallLimit - intersect[0].distance));
 		}
 
-		// floor snap
 		dir.set(0, -1, 0);
 		pos.y += 1.5;
 		this.raycaster.set(pos, dir);
@@ -328,8 +330,8 @@ class App {
 		}
 
 		if (this.immersive !== this.renderer.xr.isPresenting) {
-			this.resize();
 			this.immersive = this.renderer.xr.isPresenting;
+			if (!this.immersive) this.resize();
 		}
 
 		this.stats.update();
