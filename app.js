@@ -30,18 +30,19 @@ class App {
 		this.scene = new THREE.Scene();
 		this.scene.add(this.dolly);
 
-		const ambient = new THREE.HemisphereLight(0xffffff, 0xaaaaaa, 0.8);
+		const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 0.3);
 		this.scene.add(ambient);
 
-		// 🔆 SpotLight Toggle Setup
-		this.spotLight = new THREE.SpotLight(0xffffff, 1);
+		this.spotLight = new THREE.SpotLight(0xffffff, 0.5);
 		this.spotLight.position.set(5, 10, 5);
 		this.spotLight.angle = Math.PI / 6;
 		this.spotLight.penumbra = 0.3;
 		this.spotLight.visible = true;
 		this.scene.add(this.spotLight);
 
-		// 🔑 Enable keyboard control (fix focus + listener)
+		this.ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+		this.scene.add(this.ambientLight);
+
 		window.addEventListener('keydown', (e) => {
 			if (e.key === 'l' || e.key === 'L') this.toggleLight();
 		});
@@ -50,9 +51,10 @@ class App {
 		this.renderer.setPixelRatio(window.devicePixelRatio);
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		this.renderer.outputEncoding = THREE.sRGBEncoding;
+		this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+		this.renderer.toneMappingExposure = 0.8;
 		container.appendChild(this.renderer.domElement);
 
-		// 🛠️ Focus fix for key input to register
 		this.renderer.domElement.setAttribute('tabindex', '0');
 		this.renderer.domElement.style.outline = 'none';
 		this.renderer.domElement.focus();
@@ -122,8 +124,15 @@ class App {
 
 		loader.load('./assets/hdr/cobblestone_street_night.hdr', (texture) => {
 			const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-			pmremGenerator.dispose();
 			this.scene.environment = envMap;
+
+			this.scene.traverse((child) => {
+				if (child.isMesh && child.material && child.material.envMapIntensity !== undefined) {
+					child.material.envMapIntensity = 0.4;
+				}
+			});
+
+			pmremGenerator.dispose();
 		}, undefined, (err) => {
 			console.error('An error occurred setting the environment');
 		});
