@@ -181,34 +181,35 @@ class App {
 	}
 
 	setupXR() {
-		this.renderer.xr.enabled = true;
-		document.body.appendChild(VRButton.createButton(this.renderer));
+	this.renderer.xr.enabled = true;
+	document.body.appendChild(new VRButton(this.renderer)); // ✅ Fix is here
 
-		const timeoutId = setTimeout(() => {
-			this.useGaze = true;
-			this.gazeController = new GazeController(this.scene, this.dummyCam);
-		}, 2000);
+	const timeoutId = setTimeout(() => {
+		this.useGaze = true;
+		this.gazeController = new GazeController(this.scene, this.dummyCam);
+	}, 2000);
 
-		this.controllers = this.buildControllers(this.dolly);
+	this.controllers = this.buildControllers(this.dolly);
 
-		this.controllers.forEach(controller => {
-			controller.addEventListener('selectstart', () => controller.userData.selectPressed = true);
-			controller.addEventListener('selectend', () => controller.userData.selectPressed = false);
-			controller.addEventListener('connected', () => clearTimeout(timeoutId));
-		});
+	this.controllers.forEach(controller => {
+		controller.addEventListener('selectstart', () => controller.userData.selectPressed = true);
+		controller.addEventListener('selectend', () => controller.userData.selectPressed = false);
+		controller.addEventListener('connected', () => clearTimeout(timeoutId));
+	});
 
-		const config = {
-			panelSize: { height: 0.5 },
-			height: 256,
-			name: { fontSize: 50, height: 70 },
-			info: { position: { top: 70, backgroundColor: "#ccc", fontColor: "#000" } }
-		};
-		const content = { name: "name", info: "info" };
-		this.ui = new CanvasUI(content, config);
-		this.scene.add(this.ui.mesh);
+	const config = {
+		panelSize: { height: 0.5 },
+		height: 256,
+		name: { fontSize: 50, height: 70 },
+		info: { position: { top: 70, backgroundColor: "#ccc", fontColor: "#000" } }
+	};
+	const content = { name: "name", info: "info" };
+	this.ui = new CanvasUI(content, config);
+	this.scene.add(this.ui.mesh);
 
-		this.renderer.setAnimationLoop(this.render.bind(this));
-	}
+	this.renderer.setAnimationLoop(this.render.bind(this));
+}
+
 
 	buildControllers(parent) {
 		const controllerModelFactory = new XRControllerModelFactory();
