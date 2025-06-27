@@ -107,7 +107,11 @@ class App{
     			if (child.isMesh){
                 // Set pastel blue wall color
                 if (child.name.includes("Wall") || child.material.name.includes("Wall")) {
-                    child.material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+                    child.material = new THREE.MeshStandardMaterial({ color: 0xadd8e6 });
+                }
+                // Set floor color to light gray
+                if (child.name.includes("Floor") || child.material.name.includes("Floor")) {
+                    child.material = new THREE.MeshStandardMaterial({ color: 0xdddddd });
                 }
                 if (child.name.indexOf("PROXY") !== -1){
                     child.material.visible = false;
