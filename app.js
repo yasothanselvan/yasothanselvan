@@ -99,7 +99,7 @@ class App {
 		const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
 		pmremGenerator.compileEquirectangularShader();
 
-		loader.load('./assets/hdr/Cobblestone_Street_Night.hdr', (texture) => {
+		loader.load('./assets/hdr/cobblestone_street_night.hdr', (texture) => {
 			const envMap = pmremGenerator.fromEquirectangular(texture).texture;
 			pmremGenerator.dispose();
 			this.scene.environment = envMap;
